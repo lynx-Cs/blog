@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>专栏 - Sinley Cooper</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0a0c14 0%, #10152a 30%, #141a2e 60%, #0d1120 100%);
+            --glass-bg: rgba(18, 22, 40, 0.55);
+            --glass-bg-hover: rgba(25, 30, 50, 0.65);
+            --glass-border: rgba(100, 140, 220, 0.12);
+            --glass-border-hover: rgba(100, 140, 220, 0.3);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --glass-shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(100, 140, 220, 0.15);
+            --text-primary: #e4e8f0;
+            --text-secondary: rgba(180, 190, 210, 0.75);
+            --text-muted: rgba(140, 150, 175, 0.55);
+            --accent: #6c8ce0;
+            --accent-glow: rgba(108, 140, 224, 0.25);
+            --accent-light: #8aabf5;
+            --card-radius: 20px;
+            --card-radius-sm: 14px;
+            --transition-smooth: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            --font-main: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font-main);
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+        #particles-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+        @keyframes pageEnter { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes rippleOut { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(6); opacity: 0; } }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px) saturate(140%);
+            -webkit-backdrop-filter: blur(24px) saturate(140%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--card-radius);
+            box-shadow: var(--glass-shadow);
+            transition: all var(--transition-smooth);
+        }
+        .glass-card.interactive:hover {
+            background: var(--glass-bg-hover);
+            border-color: var(--glass-border-hover);
+            box-shadow: var(--glass-shadow-hover);
+            transform: translateY(-2px);
+        }
+
+        .page-wrapper {
+            position: relative; z-index: 1;
+            max-width: 880px; margin: 0 auto;
+            padding: 60px 24px 60px;
+            animation: pageEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .back-link {
+            display: inline-flex; align-items: center; gap: 8px;
+            color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;
+            padding: 10px 20px; border-radius: 50px;
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+            transition: all var(--transition-smooth); margin-bottom: 28px;
+        }
+        .back-link:hover { color: var(--accent-light); border-color: rgba(108,140,224,0.3); background: rgba(108,140,224,0.08); transform: translateX(-4px); }
+
+        .section-header { padding: 24px 28px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 0; }
+        .section-title { font-size: 1.3rem; font-weight: 700; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+        .section-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
+        .post-count { font-size: 0.88rem; color: var(--text-muted); }
+
+        .posts-list { display: flex; flex-direction: column; gap: 16px; margin-top: 24px; }
+        .post-card { display: block; text-decoration: none; color: inherit; padding: 24px 28px; cursor: pointer; }
+        .post-card-inner { display: flex; flex-direction: column; gap: 12px; }
+        .post-meta { display: flex; align-items: center; gap: 14px; font-size: 0.8rem; color: var(--text-muted); }
+        .post-date { display: flex; align-items: center; gap: 5px; }
+        .post-tag { padding: 3px 10px; border-radius: 50px; font-size: 0.75rem; background: rgba(108,140,224,0.1); color: var(--accent-light); border: 1px solid rgba(108,140,224,0.15); }
+        .post-title { font-size: 1.15rem; font-weight: 700; line-height: 1.4; transition: color var(--transition-smooth); }
+        .post-card:hover .post-title { color: var(--accent-light); }
+        .post-excerpt { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.7; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .post-read-more { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--accent); font-weight: 500; transition: gap var(--transition-smooth); }
+        .post-card:hover .post-read-more { gap: 10px; }
+
+        .page-footer { text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.78rem; }
+        .footer-tags { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+        .footer-tag { display: inline-block; padding: 4px 12px; border-radius: 50px; font-size: 0.75rem; color: var(--text-muted); text-decoration: none; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); transition: all var(--transition-smooth); }
+        .footer-tag:hover { color: var(--accent-light); border-color: rgba(108,140,224,0.3); background: rgba(108,140,224,0.08); }
+
+        @media (max-width: 768px) {
+            .page-wrapper { padding: 30px 16px 40px; }
+            .section-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .post-card { padding: 18px 20px; }
+            .post-title { font-size: 1.05rem; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particles-canvas"></canvas>
+
+    <div class="page-wrapper">
+        <a href="index.html" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            返回首页
+        </a>
+
+        <div class="glass-card section-header">
+            <div class="section-title"><span class="dot"></span>文章专栏</div>
+            <div class="post-count" id="post-count"></div>
+        </div>
+
+        <div class="posts-list" id="posts-list"></div>
+
+        <div class="page-footer">
+            <div class="footer-tags">
+                <a href="about.html" class="footer-tag">关于作者</a>
+                <a href="index.html" class="footer-tag">返回主页</a>
+                <a href="column.html" class="footer-tag">文章专栏</a>
+            </div>
+            <p style="margin-top:10px;">&copy; 2026 Sinley Cooper · 用代码书写思考</p>
+        </div>
+    </div>
+
+    <script>
+        // 粒子背景
+        (function() {
+            const c = document.getElementById('particles-canvas'), ctx = c.getContext('2d');
+            let ps = [], ai;
+            function rs() { c.width = innerWidth; c.height = innerHeight; }
+            rs(); addEventListener('resize', rs);
+            class P {
+                constructor() { this.rst(); this.y = Math.random() * c.height; }
+                rst() { this.x = Math.random() * c.width; this.y = -10; this.size = Math.random() * 2 + 0.5; this.sy = Math.random() * 0.4 + 0.15; this.sx = (Math.random() - 0.5) * 0.3; this.o = Math.random() * 0.5 + 0.1; this.fd = Math.random() > 0.5 ? 1 : -1; }
+                upd() { this.y += this.sy; this.x += this.sx; this.o += this.fd * 0.003; if (this.o >= 0.6) this.fd = -1; if (this.o <= 0.1) this.fd = 1; if (this.y > c.height + 10) this.rst(); if (this.x < -10) this.x = c.width + 10; if (this.x > c.width + 10) this.x = -10; }
+                draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fillStyle = `rgba(140,165,235,${this.o})`; ctx.fill(); }
+            }
+            for (let i = 0; i < 80; i++) ps.push(new P());
+            function anim() {
+                ctx.clearRect(0, 0, c.width, c.height);
+                ps.forEach(p => { p.upd(); p.draw(); });
+                for (let i = 0; i < ps.length; i++) for (let j = i + 1; j < ps.length; j++) {
+                    const dx = ps[i].x - ps[j].x, dy = ps[i].y - ps[j].y, d = Math.sqrt(dx * dx + dy * dy);
+                    if (d < 120) { ctx.beginPath(); ctx.moveTo(ps[i].x, ps[i].y); ctx.lineTo(ps[j].x, ps[j].y); ctx.strokeStyle = `rgba(140,165,235,${0.06*(1-d/120)})`; ctx.lineWidth = 0.5; ctx.stroke(); }
+                }
+                ai = requestAnimationFrame(anim);
+            }
+            anim();
+        })();
+
+        // 文章数据
+        const posts = [
+            { id: 1, title: '你好，世界 —— 我的第一篇博客', date: '2026-07-05', tag: '随笔', excerpt: '这是我在新博客平台的第一篇文章。在这里，我将分享关于技术、生活和思考的一切。' },
+            { id: 2, title: '前端性能优化实战：从 5 秒到 0.5 秒的蜕变', date: '2026-07-03', tag: '技术', excerpt: '网站性能直接影响用户体验和转化率。本文分享我在实际项目中的性能优化经验。' },
+            { id: 3, title: 'CSS 动画完全指南：从入门到惊艳', date: '2026-06-28', tag: 'CSS', excerpt: 'CSS 动画是前端开发中不可或缺的技能。系统地介绍核心概念和高级玩法。' },
+            { id: 4, title: '深入理解 JavaScript 异步编程', date: '2026-06-22', tag: 'JavaScript', excerpt: '从回调地狱到 Promise，从 async/await 到事件循环，彻底理解异步编程。' },
+            { id: 5, title: '设计模式在前端开发中的实际应用', date: '2026-06-15', tag: '架构', excerpt: '设计模式不是教科书上的死知识，而是解决实际问题的利器。' },
+            { id: 6, title: '高效团队协作：Git 工作流最佳实践', date: '2026-06-08', tag: '工具', excerpt: '好的 Git 工作流能够让团队协作事半功倍。总结分支策略和提交规范。' },
+        ];
+
+        document.getElementById('post-count').textContent = `共 ${posts.length} 篇`;
+        document.getElementById('posts-list').innerHTML = posts.map(p => `
+            <a href="posts/post.html?id=${p.id}" class="post-card glass-card interactive">
+                <div class="post-card-inner">
+                    <div class="post-meta">
+                        <span class="post-date">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            ${p.date}
+                        </span>
+                        <span class="post-tag">${p.tag}</span>
+                    </div>
+                    <h2 class="post-title">${p.title}</h2>
+                    <p class="post-excerpt">${p.excerpt}</p>
+                    <span class="post-read-more">阅读全文 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+                </div>
+            </a>
+        `).join('');
+
+        // 全局点击涟漪
+        document.addEventListener('click', function(e) {
+            const ripple = document.createElement('span');
+            ripple.style.cssText = 'position:fixed;pointer-events:none;z-index:99999;width:24px;height:24px;border-radius:50%;background:radial-gradient(circle,rgba(108,140,224,0.5) 0%,rgba(108,140,224,0) 70%);will-change:transform,opacity;animation:rippleOut 0.6s cubic-bezier(0,0,0.2,1) forwards;left:' + (e.clientX - 12) + 'px;top:' + (e.clientY - 12) + 'px;';
+            document.body.appendChild(ripple);
+            ripple.addEventListener('animationend', () => ripple.remove());
+        });
+    </script>
+</body>
+</html>

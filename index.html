@@ -698,41 +698,44 @@
             padding: 32px;
         }
         .contact-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
         }
         .contact-card-item {
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 16px;
-            border-radius: var(--card-radius-sm);
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.06);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
             cursor: pointer;
             text-decoration: none;
             color: var(--text-primary);
             transition: all var(--transition-smooth);
-            aspect-ratio: 1;
         }
         .contact-card-item:hover {
-            background: rgba(255,255,255,0.08);
-            border-color: rgba(108,140,224,0.25);
-            transform: translateY(-1px);
+            background: rgba(255,255,255,0.12);
+            border-color: rgba(108,140,224,0.3);
+            transform: translateY(-2px);
         }
         .contact-card-icon {
-            width: 28px;
-            height: 28px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            font-size: 0.7rem;
+            font-weight: 700;
         }
         .contact-card-icon svg {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
         }
         .page-footer {
             text-align: center;
@@ -951,12 +954,8 @@
                     </div>
                     <div class="weather-details">
                         <div class="weather-detail-item">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h2.81A4.5 4.5 0 1 1 17.5 19z"/></svg>
-                            <span>湿度 <strong id="weather-humidity">--</strong>%</span>
-                        </div>
-                        <div class="weather-detail-item">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
-                            <span>风速 <strong id="weather-wind">--</strong> km/h</span>
+                            <span>风力 <strong id="weather-wind">--</strong></span>
                         </div>
                         <div class="weather-detail-item">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path d="M8.56 2.75c3.37 6.03 3.37 12.47 0 18.5"/><path d="M12 2c2.3 3.23 3.45 7.86 0 14"/></svg>
@@ -1016,24 +1015,19 @@
     </div>
 
     <script>
-        // ===== Bing 每日壁纸 =====
+        // ===== 高质量风景壁纸（Unsplash 精选，按日轮换） =====
         (function() {
-            const key = 'bing_wallpaper';
-            const cached = JSON.parse(localStorage.getItem(key) || '{}');
-            const today = new Date().toDateString();
-            if (cached.date === today && cached.url) {
-                document.body.style.backgroundImage = 'url(' + cached.url + ')';
-                return;
-            }
-            fetch('https://cn.bing.com/HPImageArchive.aspx?format=xml&idx=0&n=1')
-                .then(r => r.text())
-                .then(xml => {
-                    const doc = new DOMParser().parseFromString(xml, 'text/xml');
-                    const url = 'https://cn.bing.com' + doc.querySelector('image url').textContent;
-                    document.body.style.backgroundImage = 'url(' + url + ')';
-                    localStorage.setItem(key, JSON.stringify({ date: today, url }));
-                })
-                .catch(() => {});
+            const walls = [
+                'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80',
+                'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1920&q=80',
+                'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1920&q=80',
+                'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920&q=80',
+                'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1920&q=80',
+                'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=1920&q=80',
+                'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920&q=80',
+            ];
+            const idx = new Date().getDate() % walls.length;
+            document.body.style.backgroundImage = 'url(' + walls[idx] + ')';
         })();
 
         // ===== 数据版本（更新版本号自动清空旧数据） =====
@@ -1259,38 +1253,36 @@
             toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
         }
 
-        // ===== 天气（wttr.in 免费 API，IP 自动定位） =====
+        // ===== 天气（vvhan 国内 API，IP 自动定位） =====
         (function() {
-            const iconMap = {
-                113:'☀️',116:'🌤️',119:'☁️',122:'☁️',143:'🌫️',176:'🌦️',179:'🌧️',
-                182:'🌧️',185:'🌧️',200:'⛈️',227:'🌨️',230:'🌨️',248:'🌫️',
-                260:'🌫️',263:'🌧️',266:'🌧️',281:'🌧️',284:'🌧️',
-                293:'🌧️',296:'🌧️',299:'🌧️',302:'🌧️',305:'🌧️',
-                308:'🌧️',311:'🌧️',314:'🌧️',317:'🌧️',320:'🌨️',
-                323:'🌨️',326:'🌨️',329:'🌨️',332:'🌨️',335:'🌨️',
-                338:'🌨️',350:'🌨️',353:'🌧️',356:'🌧️',359:'🌧️',
-                362:'🌧️',365:'🌧️',368:'🌨️',371:'🌨️',374:'🌨️',
-                377:'🌨️',386:'⛈️',389:'⛈️',392:'⛈️',395:'🌨️'
-            };
+            // ponytail: vvhan returns Chinese weather descriptions directly, no icon map needed
             async function fetchWeather() {
                 try {
-                    const res = await fetch('https://wttr.in/?format=j1');
+                    const res = await fetch('https://api.vvhan.com/api/weather');
                     const w = await res.json();
-                    const c = w.current_condition[0];
-                    const area = w.nearest_area[0];
-                    const loc = (area.areaName ? area.areaName[0].value : '') + ', ' + (area.country ? area.country[0].value : '');
-                    document.getElementById('weather-location').textContent = loc || '未知';
-                    document.getElementById('weather-temp').textContent = c.temp_C + '°C';
-                    document.getElementById('weather-icon').textContent = iconMap[c.weatherCode] || '🌡️';
-                    document.getElementById('weather-desc').textContent = c.weatherDesc[0].value;
-                    document.getElementById('weather-wind').textContent = c.windspeedKmph;
-                    document.getElementById('weather-humidity').textContent = c.humidity;
-                    document.getElementById('weather-update').textContent = c.observation_time + ' 更新';
+                    if (!w.success) throw new Error('API fail');
+                    document.getElementById('weather-location').textContent = w.city || '未知';
+                    document.getElementById('weather-temp').textContent = (w.info.wendu || '--') + '°C';
+                    document.getElementById('weather-desc').textContent = w.info.type || '--';
+                    document.getElementById('weather-wind').textContent = w.info.fengli || '--';
+                    document.getElementById('weather-update').textContent = '今日 ' + (w.info.high || '') + ' / ' + (w.info.low || '');
+                    document.getElementById('weather-icon').textContent = typeEmoji(w.info.type);
                     document.getElementById('weather-loading').style.display = 'none';
                     document.getElementById('weather-body').style.display = '';
                 } catch(e) {
                     document.getElementById('weather-loading').innerHTML = '<span>天气加载失败</span>';
                 }
+            }
+            function typeEmoji(t) {
+                if (!t) return '🌡️';
+                if (t.includes('晴')) return '☀️';
+                if (t.includes('云')) return '⛅';
+                if (t.includes('阴')) return '☁️';
+                if (t.includes('雨')) return '🌧️';
+                if (t.includes('雪')) return '🌨️';
+                if (t.includes('雷')) return '⛈️';
+                if (t.includes('雾')||t.includes('霾')) return '🌫️';
+                return '🌤️';
             }
             fetchWeather();
         })();

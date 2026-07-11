@@ -786,6 +786,20 @@
             100% { transform: scale(6); opacity: 0; }
         }
 
+        /* === 鼠标跟随光环 === */
+        #cursor-glow {
+            position: fixed;
+            pointer-events: none;
+            z-index: 99998;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(108,140,224,0.12) 0%, rgba(108,140,224,0.04) 40%, transparent 70%);
+            transform: translate(-50%, -50%);
+            will-change: left, top;
+            transition: opacity 0.3s;
+        }
+
         /* === Toast === */
         .toast {
             position: fixed;
@@ -861,6 +875,7 @@
     </style>
 </head>
 <body>
+    <div id="cursor-glow"></div>
     <canvas id="particles-canvas"></canvas>
 
     <div class="page-wrapper">
@@ -1253,36 +1268,28 @@
             toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
         }
 
-        // ===== 天气（vvhan 国内 API，IP 自动定位） =====
+        // ===== 天气（wttr.in，IP 自动定位） =====
         (function() {
-            // ponytail: vvhan returns Chinese weather descriptions directly, no icon map needed
+            const iconMap = {113:'☀️',116:'🌤️',119:'☁️',122:'☁️',143:'🌫️',176:'🌦️',179:'🌧️',182:'🌧️',185:'🌧️',200:'⛈️',227:'🌨️',230:'🌨️',248:'🌫️',260:'🌫️',263:'🌧️',266:'🌧️',281:'🌧️',284:'🌧️',293:'🌧️',296:'🌧️',299:'🌧️',302:'🌧️',305:'🌧️',308:'🌧️',311:'🌧️',314:'🌧️',317:'🌧️',320:'🌨️',323:'🌨️',326:'🌨️',329:'🌨️',332:'🌨️',335:'🌨️',338:'🌨️',350:'🌨️',353:'🌧️',356:'🌧️',359:'🌧️',362:'🌧️',365:'🌧️',368:'🌨️',371:'🌨️',374:'🌨️',377:'🌨️',386:'⛈️',389:'⛈️',392:'⛈️',395:'🌨️'};
             async function fetchWeather() {
                 try {
-                    const res = await fetch('https://api.vvhan.com/api/weather');
+                    const res = await fetch('https://wttr.in/?format=j1');
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
                     const w = await res.json();
-                    if (!w.success) throw new Error('API fail');
-                    document.getElementById('weather-location').textContent = w.city || '未知';
-                    document.getElementById('weather-temp').textContent = (w.info.wendu || '--') + '°C';
-                    document.getElementById('weather-desc').textContent = w.info.type || '--';
-                    document.getElementById('weather-wind').textContent = w.info.fengli || '--';
-                    document.getElementById('weather-update').textContent = '今日 ' + (w.info.high || '') + ' / ' + (w.info.low || '');
-                    document.getElementById('weather-icon').textContent = typeEmoji(w.info.type);
+                    const c = w.current_condition[0];
+                    const area = w.nearest_area[0];
+                    const loc = (area.areaName?.[0]?.value || '') + ', ' + (area.country?.[0]?.value || '');
+                    document.getElementById('weather-location').textContent = loc || '未知';
+                    document.getElementById('weather-temp').textContent = c.temp_C + '°C';
+                    document.getElementById('weather-icon').textContent = iconMap[c.weatherCode] || '🌤️';
+                    document.getElementById('weather-desc').textContent = c.weatherDesc[0].value;
+                    document.getElementById('weather-wind').textContent = c.windspeedKmph + ' km/h';
+                    document.getElementById('weather-update').textContent = c.observation_time + ' 更新';
                     document.getElementById('weather-loading').style.display = 'none';
                     document.getElementById('weather-body').style.display = '';
                 } catch(e) {
-                    document.getElementById('weather-loading').innerHTML = '<span>天气加载失败</span>';
+                    document.getElementById('weather-loading').innerHTML = '<span>天气加载失败，请刷新重试</span>';
                 }
-            }
-            function typeEmoji(t) {
-                if (!t) return '🌡️';
-                if (t.includes('晴')) return '☀️';
-                if (t.includes('云')) return '⛅';
-                if (t.includes('阴')) return '☁️';
-                if (t.includes('雨')) return '🌧️';
-                if (t.includes('雪')) return '🌨️';
-                if (t.includes('雷')) return '⛈️';
-                if (t.includes('雾')||t.includes('霾')) return '🌫️';
-                return '🌤️';
             }
             fetchWeather();
         })();
@@ -1306,6 +1313,25 @@
                 if (w && !w.closed) w.close();
             }, 800);
         }
+
+        // ===== 鼠标跟随光环 =====
+        (function() {
+            const glow = document.getElementById('cursor-glow');
+            let x = 0, y = 0, tx = 0, ty = 0;
+            document.addEventListener('mousemove', function(e) {
+                tx = e.clientX; ty = e.clientY;
+                glow.style.opacity = '1';
+            });
+            document.addEventListener('mouseleave', function() { glow.style.opacity = '0'; });
+            function animate() {
+                x += (tx - x) * 0.08;
+                y += (ty - y) * 0.08;
+                glow.style.left = x + 'px';
+                glow.style.top = y + 'px';
+                requestAnimationFrame(animate);
+            }
+            animate();
+        })();
 
         // ===== 全局点击涟漪 =====
         document.addEventListener('click', function(e) {

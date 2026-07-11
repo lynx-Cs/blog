@@ -389,10 +389,11 @@
                 document.body.style.backgroundImage = 'url(' + cached.url + ')';
                 return;
             }
-            fetch('https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1')
-                .then(r => r.json())
-                .then(data => {
-                    const url = 'https://cn.bing.com' + data.images[0].url;
+            fetch('https://cn.bing.com/HPImageArchive.aspx?format=xml&idx=0&n=1')
+                .then(r => r.text())
+                .then(xml => {
+                    const doc = new DOMParser().parseFromString(xml, 'text/xml');
+                    const url = 'https://cn.bing.com' + doc.querySelector('image url').textContent;
                     document.body.style.backgroundImage = 'url(' + url + ')';
                     localStorage.setItem(key, JSON.stringify({ date: today, url }));
                 })
